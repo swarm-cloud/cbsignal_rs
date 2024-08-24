@@ -27,7 +27,7 @@ pub struct Info {
     security_enabled: bool,
     cpu_usage: i32,
     internal_ip: String,
-    compression_enabled: bool,
+    // compression_enabled: bool,
     memory: u64,
     cert_infos: Option<Vec<CertInfo>>,
 }
@@ -76,10 +76,10 @@ pub async fn get_info(State(state): State<ConfigState>, Query(params): Query<Sta
         None => false,
         Some(security) => security.enable,
     };
-    let compression_enabled = match state.config.compression {
-        None => false,
-        Some(compression) => compression.enable,
-    };
+    // let compression_enabled = match state.config.compression {
+    //     None => false,
+    //     Some(compression) => compression.enable,
+    // };
     let mut cert_infos = Vec::new();
     if let Some(tls) = state.config.tls {
         match tls {
@@ -104,7 +104,7 @@ pub async fn get_info(State(state): State<ConfigState>, Query(params): Query<Sta
         security_enabled,
         cpu_usage: cpu,
         internal_ip: state.local_ip,
-        compression_enabled,
+        // compression_enabled,
         memory: used_memory,
         cert_infos: None,
     };

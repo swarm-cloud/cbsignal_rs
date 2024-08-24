@@ -5,7 +5,7 @@
 See config.yaml
 
 ## Run instructions
-TODO
+sudo ./admin.sh start
 
 ### Get real-time information of signal service
 ```

@@ -7,8 +7,7 @@ log:
   log_rotate_size: 1           # rotate 转存大小
 
 port:
-#  - 80
-  - 801
+  - 80
 
 #tls:
 #  - port: 4433
@@ -28,7 +27,7 @@ compression:
 security:
   enable: true                # Enable Authentication
   maxTimeStampAge: 3600        # Timestamp expiration time in seconds
-  token: "example"              # Custom token, no more than 8 characters
+  token: example              # Custom token, no more than 8 characters
 
 
 

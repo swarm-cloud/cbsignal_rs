@@ -36,6 +36,9 @@ hmac = "0.12.1"
 hex = "0.4.3"
 md-5 = "0.10.6"
 ratelimit = "0.9.1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] } # 日志处理
+tracing-appender = "0.2.3"
 
 [profile.release]
 overflow-checks = true
