@@ -1,61 +1,23 @@
-name: release
 
 on:
-    push:
-        tags:
-            - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
+  push:
+    tags:
+      - "v*" # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
-    build:
-        permissions: write-all
-        name: Upload Release Asset
-        runs-on: ${{ matrix.os }}
-        strategy:
-            matrix:
-                os: [ubuntu-latest]
-        steps:
-            - name: Cache cargo registry
-              uses: actions/cache@v1
-              with:
-                  path: ~/.cargo/registry
-                  key: ${{ runner.os }}-cargo-registry
-            - name: Cache cargo index
-              uses: actions/cache@v1
-              with:
-                  path: ~/.cargo/git
-                  key: ${{ runner.os }}-cargo-index
-            - name: Cache cargo build
-              uses: actions/cache@v1
-              with:
-                  path: target
-                  key: ${{ runner.os }}-cargo-build-target
-            - name: Checkout code
-              uses: actions/checkout@v2
-              with:
-                  token: ${{ secrets.GH_TOKEN }}
-                  submodules: recursive
-            - name: Build project
-              run: |
-                rustup target add x86_64-unknown-linux-musl && cargo build --release --target x86_64-unknown-linux-musl
-            - name: Create Release
-              id: create_release
-              uses: actions/create-release@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-              with:
-                  tag_name: ${{ github.ref }}
-                  release_name: Release ${{ github.ref }}
-                  draft: false
-                  prerelease: false
-            - name: Upload asset
-              id: upload-asset
-              uses: actions/upload-release-asset@v1
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-              with:
-                  upload_url: ${{ steps.create_release.outputs.upload_url }}
-                  asset_path: ./target/release/cbsignal_rs
-                  asset_name: cbsignal_rs
-                  asset_content_type: application/octet-stream
-            - name: Set env
-              run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+  release:
+    name: release ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [ x86_64-pc-windows-gnu, x86_64-unknown-linux-musl ]
+    steps:
+      - uses: actions/checkout@master
+      - name: Compile and release
+        uses: rust-build/rust-build.action@v1.4.5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          RUSTTARGET: ${{ matrix.target }}
+          EXTRA_FILES: "admin.sh config.yaml"
