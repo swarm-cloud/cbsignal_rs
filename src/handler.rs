@@ -102,8 +102,6 @@ pub async fn handle_long_polling(mut state: AppState, id: &str) -> Response<Body
             Response::default()
         }
     }
-
-    // Response::default()
 }
 
 async fn handle_socket(mut fut: upgrade::UpgradeFut, mut state: AppState, params: SearchParams) -> Result<(), WebSocketError> {
@@ -111,7 +109,7 @@ async fn handle_socket(mut fut: upgrade::UpgradeFut, mut state: AppState, params
     let (sender_tx, mut sender_rx) = mpsc::unbounded_channel();
     let version = state.version_number;
     let peer_id = params.id.clone();
-    let client = Client::new(&params.id, sender_tx);
+    let client = Client::new(&peer_id, sender_tx);
     let mut hub = state.hub.clone();
     join(client.clone(), &state.hub).await;
     let (rx, mut tx) = ws.split(tokio::io::split);
@@ -122,7 +120,7 @@ async fn handle_socket(mut fut: upgrade::UpgradeFut, mut state: AppState, params
     if !check_ratelimit(&state) {
         return tx.write_frame(Frame::close(5000, "reach ratelimit".as_bytes())).await
     }
-    let mut recv_task = tokio::task::spawn(async move {
+    tokio::task::spawn(async move {
         loop {
             // Empty send_fn is fine because the benchmark does not create obligated writes.
             let frame = match rx
@@ -179,35 +177,16 @@ async fn handle_socket(mut fut: upgrade::UpgradeFut, mut state: AppState, params
             }
         }
     });
-    let mut send_task = tokio::task::spawn(async move {
-        let msg = &SignalMsg {
-            action: Some("ver".to_string()),
-            ver: Some(version),
-            ..SignalMsg::default()
-        };
-        if tx.write_frame(Frame::text(Payload::Owned(serde_json::to_vec(msg).unwrap()))).await.is_ok() {
-            while let Some(msg) = sender_rx.recv().await {
-                if tx.write_frame(Frame::text(Payload::Owned(msg.into_bytes()))).await.is_err() {
-                    break
-                }
+    let msg = &SignalMsg {
+        action: Some("ver".to_string()),
+        ver: Some(version),
+        ..SignalMsg::default()
+    };
+    if tx.write_frame(Frame::text(Payload::Owned(serde_json::to_vec(msg).unwrap()))).await.is_ok() {
+        while let Some(msg) = sender_rx.recv().await {
+            if tx.write_frame(Frame::text(Payload::Owned(msg.into_bytes()))).await.is_err() {
+                break
             }
-        }
-    });
-
-    tokio::select! {
-        rv_a = (&mut send_task) => {
-            // match rv_a {
-            //     Ok(a) => println!("{a} messages sent to {who}"),
-            //     Err(a) => println!("Error sending messages {a:?}")
-            // }
-            recv_task.abort();
-        },
-        rv_b = (&mut recv_task) => {
-            // match rv_b {
-            //     Ok(b) => println!("Received {b} messages"),
-            //     Err(b) => println!("Error receiving messages {b:?}")
-            // }
-            send_task.abort();
         }
     }
     leave(peer_id.as_str(), &state.hub).await;

@@ -10,22 +10,19 @@ port:
   - 80
 
 #tls:
-#  - port: 4433
+#  - port: 443
 #    cert: cert/cdnbye.pem
 #    key: cert/cdnbye.key
 
 ratelimit:
-  enable: true
+  enable: false
   max_rate: 400                # max requests per second
 
 stats:
   enable: true
 
-compression:
-  enable: false
-
 security:
-  enable: true                # Enable Authentication
+  enable: false                # Enable Authentication
   maxTimeStampAge: 3600        # Timestamp expiration time in seconds
   token: example              # Custom token, no more than 8 characters
 
