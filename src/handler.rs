@@ -109,7 +109,7 @@ async fn handle_socket(mut fut: upgrade::UpgradeFut, mut state: AppState, params
     let (sender_tx, mut sender_rx) = mpsc::unbounded_channel();
     let version = state.version_number;
     let peer_id = params.id.clone();
-    let client = Client::new(&peer_id, sender_tx);
+    let client = Client::new(&peer_id, sender_tx.clone());
     let mut hub = state.hub.clone();
     join(client.clone(), &state.hub).await;
     let (rx, mut tx) = ws.split(tokio::io::split);
@@ -176,6 +176,7 @@ async fn handle_socket(mut fut: upgrade::UpgradeFut, mut state: AppState, params
                 _ => {}
             }
         }
+        let _ = sender_tx.send("".to_string());
     });
     let msg = &SignalMsg {
         action: Some("ver".to_string()),
@@ -184,6 +185,9 @@ async fn handle_socket(mut fut: upgrade::UpgradeFut, mut state: AppState, params
     };
     if tx.write_frame(Frame::text(Payload::Owned(serde_json::to_vec(msg).unwrap()))).await.is_ok() {
         while let Some(msg) = sender_rx.recv().await {
+            if msg == "" {
+                break
+            }
             if tx.write_frame(Frame::text(Payload::Owned(msg.into_bytes()))).await.is_err() {
                 break
             }

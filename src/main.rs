@@ -62,7 +62,7 @@ pub struct ConfigState {
 
 #[tokio::main]
 async fn main() {
-    console_subscriber::init();
+    // console_subscriber::init();
     let opts = arguments().run();
     // println!("path {:}", opts.path);
     warn!("version", VERSION);
