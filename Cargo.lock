@@ -404,7 +404,7 @@ checksum = "a3e368af43e418a04d52505cf3dbc23dda4e3407ae2fa99fd0e4f308ce546acc"
 
 [[package]]
 name = "cbsignal_rs"
-version = "5.0.0"
+version = "5.0.1"
 dependencies = [
  "anyhow",
  "async-trait",
